@@ -1,0 +1,108 @@
+import Cocoa
+import Foundation
+let filename="GroceryProduct";
+var dictionary = Dictionary<String, String>()
+var dp=0
+let path=Bundle.main.path(forResource: filename,ofType: "json")// GroceryProduct.json文件路径
+let jsonData=NSData(contentsOfFile: path!)//GroceryProduct.json文件内容
+let json = try JSONSerialization.jsonObject(with: jsonData! as Data, options:.mutableLeaves) as![String:Any]//通过JSON函数初始化jsonData
+let fileHandle = FileHandle.init(forUpdatingAtPath:  "/Users/yangdongju/Desktop/iOS/\(filename).swift")//创建文件句柄
+let str_begin = "struct \(filename): Codable {"
+let data_begin = str_begin.data(using: String.Encoding.utf8)!
+let str_end = "\n}\n"
+let data_end = str_end.data(using: String.Encoding.utf8)!
+fileHandle?.write(data_begin)
+class dic{
+    var key:String = ""
+    var value:String = ""
+}
+var arry_dic = [dic]()
+var arry = [Int]()
+var ia=0
+var di=0
+//print(json)
+for i in json
+{
+    if i.value is String{
+        let str = "\n \t var \(i.key): String "
+        let data = str.data(using: String.Encoding.utf8)!
+        fileHandle?.write(data)
+    }
+    else if i.value is Int{
+        let str = "\n \t var \(i.key): Int "
+        let data = str.data(using: String.Encoding.utf8)!
+        fileHandle?.write(data)
+    }
+    else if i.value is Double{
+        let str = "\n \t var \(i.key): Double "
+        let data = str.data(using: String.Encoding.utf8)!
+        fileHandle?.write(data)
+    }
+    else if i.value is Float{
+        let str = "\n \t var \(i.key): Float"
+        let data = str.data(using: String.Encoding.utf8)!
+        fileHandle?.write(data)
+    }
+    else if i.value is NSArray{
+        let str = "\n \t var \(i.key): Array"
+        let data = str.data(using: String.Encoding.utf8)!
+        fileHandle?.write(data)
+        let z = i.value
+        let az=z as! NSArray//将嵌套json转化为数组
+        let datax : NSData! = try? JSONSerialization.data(withJSONObject: az[0], options: []) as NSData?
+        let json1 = try JSONSerialization.jsonObject(with: datax! as Data, options:.mutableLeaves) as![String:Any]//通过JSON函数初始化jsonData
+//        print("data:\(json1)")
+        arry.append(json1.count)
+//        print(json1)
+        for ii in json1{
+            dp=1
+            let x=dic()
+            if ii.value is String{
+                x.key=ii.key
+                x.value="String"
+//                dictionary[ii.key] = "String"
+            }
+            else if ii.value is Int{
+                x.key=ii.key
+                x.value="Int"
+//                dictionary[ii.key] = "Int"
+            }
+            else if ii.value is Double{
+                x.key=ii.key
+                x.value="Double"
+//                dictionary[ii.key] = "Double"
+            }
+            else if ii.value is Float{
+                x.key=ii.key
+                x.value="Float"
+//                dictionary[ii.key] = "Float"
+            }
+            arry_dic.append(x)
+        }
+    }
+}
+    fileHandle?.write(data_end)
+    if dp==1{
+        var ax=0 ,zx=1
+        for ix in 0..<arry_dic.count {
+//            print(arry_dic[ix].key,arry_dic[ix].value)
+            if zx<=arry[ax]{
+                if zx==1{
+                    let str_beginx = "struct \(filename)\(ia)Subclass: Codable {"
+                    let data_beginx = str_beginx.data(using: String.Encoding.utf8)!
+                    fileHandle?.write(data_beginx)
+                }
+                let str = "\n \t var \(arry_dic[ix].key): \(arry_dic[ix].value)"
+                let data = str.data(using: String.Encoding.utf8)!
+                fileHandle?.write(data)
+                if zx==arry[ax]{
+                    fileHandle?.write(data_end)
+                    zx=1
+                    ax+=1
+                    ia+=1
+                    continue
+                }
+                zx+=1
+            }
+        }
+    }
